@@ -85,7 +85,7 @@ Now, create a file called ca-csr.json: (Change information in "names" as appropr
         ]
     }
 
-Now, create your Certificate authority cert and key. This will be used as your Certificate Authority cert that will be used on your nodes. Remember, if you want a UNIQUE certificate authority for both peer and client TLS you will need this twice:
+Now, create your Certificate authority cert and key. This will be used as your Certificate Authority cert that will be used on your nodes. Remember, if you want a UNIQUE certificate authority for both peer and client TLS you will need this twice. This will create a ca.pem and ca-key.pem for your CA accordingly:
 
     cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
 
@@ -109,3 +109,49 @@ Now, create a file for the certificates for each node called kube-<hostname>.jso
             }
         ]
     }
+
+Now, sign those cert requests! Remember, each CSR needs to get signed by each appropriate CA. The nodes that are your masters will need to be signed by BOTH your client and peer CA, and the nodes that will be minions will only need to be signed by your client CA. Any TLS certificates for users accessing the APIs will need to also be signed only by the client CA.
+
+    cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client-server kube-<hostname>.json | cfssljson -bare kube-<hostname>
+
+These certs will need to be translated into a format that can be inserted into a chef node attribute. This means that each newline must be changed into a "\n" delimiter.
+
+    sed ':a;N;$!ba;s/\n/\\n/g' kube-<hostname>.pem
+    sed ':a;N;$!ba;s/\n/\\n/g' kube-<hostname>-key.pem
+
+***
+
+On each node, you will install chef, and do some prep work to get chef ready.
+
+    yum install -y git
+    rpm -i chef-12.4.0-1.el7.x86_64.rpm
+    mkdir /var/chef
+    mkdir /var/chef/cookbooks
+    cd /var/chef/cookbooks
+    git clone https://github.com/bloomberg/kubernetes-cluster-cookbook
+
+You are now ready to write out your solo.json that Chef-solo will ingest to converge the cookbook! This json will contain node attributes that specify options exposed by this cookbook- and will also optionally include your TLS certificates and other information. This file you will need to create will be /etc/chef/solo.json.
+
+NON TLS Example solo.json for master. ['kubernetes']['etcd']['members'] will contain the fqdn of all your masters- 
+```json
+{
+  "kubernetes": {
+    "etcd": {
+      "members": ["master1.example.com", "master2.example.com", "master3.example.com"]
+    }
+  },
+  "run_list": ["recipe[kubernetes-cluster::master]"]
+}
+```
+
+NON TLS Example solo.json for minions. ['kubernetes']['master']['fqdn'] will contain the fqdn of all your masters- 
+```json
+{
+  "kubernetes": {
+    "master": {
+      "fqdn": ["master1.example.com", "master2.example.com", "master3.example.com"]
+    }
+  },
+  "run_list": ["recipe[kubernetes-cluster::minion]"]
+}
+```

@@ -155,3 +155,66 @@ NON TLS Example solo.json for minions. ['kubernetes']['master']['fqdn'] will con
   "run_list": ["recipe[kubernetes-cluster::minion]"]
 }
 ```
+
+TLS enabled Example solo.json for master. ['kubernetes']['etcd']['members'] will contain the fqdn of all your masters, fill in your certificate information as needed- 
+```json
+{
+  "kubernetes": {
+    "etcd": {
+      "members": ["master1.example.com", "master2.example.com", "master3.example.com"],
+      "peer": {
+        "ca": "-----BEGIN CERTIFICATE-----\ndatadata\n-----END CERTIFICATE-----",
+        "cert": "-----BEGIN CERTIFICATE-----\ndatadata\n-----END CERTIFICATE-----",
+        "key": "-----BEGIN KEY-----\ndatadata\n-----END KEY-----"
+      },
+      "client": {
+        "ca": "-----BEGIN CERTIFICATE-----\ndatadata\n-----END CERTIFICATE-----",
+        "cert": "-----BEGIN CERTIFICATE-----\ndatadata\n-----END CERTIFICATE-----",
+        "key": "-----BEGIN KEY-----\ndatadata\n-----END KEY-----"
+      }
+    },
+    "secure": {
+      "enabled": "true"
+    }
+  },
+  "run_list": ["recipe[kubernetes-cluster::master]"]
+}
+```
+
+TLS enabled Example solo.json for minions. ['kubernetes']['master']['fqdn'] will contain the fqdn of all your masters, fill in your certificate information as needed- 
+```json
+{
+  "kubernetes": {
+    "etcd": {
+      "client": {
+        "ca": "-----BEGIN CERTIFICATE-----\ndatadata\n-----END CERTIFICATE-----",
+        "cert": "-----BEGIN CERTIFICATE-----\ndatadata\n-----END CERTIFICATE-----",
+        "key": "-----BEGIN KEY-----\ndatadata\n-----END KEY-----"
+      }
+    },
+    "secure": {
+      "enabled": "true"
+    },
+    "master": {
+      "fqdn": ["master1.example.com", "master2.example.com", "master3.example.com"]
+    }
+  },
+  "run_list": ["recipe[kubernetes-cluster::minion]"]
+}
+```
+
+Now run chef-solo and converge your nodes! Start with the masters, first. Then once they all converge successfully, move on to the minions.
+
+    chef-solo -j /etc/chef/solo.json
+
+From on the masters- you can verify everything is good using kubectl and etcdctl. On a TLS secured setup use the following:
+
+    etcdctl --peers=https://127.0.0.1:2379 --cert-file=/etc/kubernetes/secrets/client.srv.crt --key-file=/etc/kubernetes/secrets/client.srv.key --ca-file=/etc/kubernetes/secrets/client.ca.crt cluster-health
+    kubectl --kubeconfig=/etc/kubernetes/secrets/kube.config get nodes
+
+On a non TLS secured setup, use the following:
+
+    etcdctl cluster-health
+    kubectl get nodes
+
+You should now be good to use your Kubernetes cluster!

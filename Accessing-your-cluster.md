@@ -1,7 +1,3 @@
-The following guide will aid you in deploying an application to your Kubernetes cluster. We will set you up for accessing the cluster, provide examples of replication controllers and services deploy your application, and lastly perform more advanced operations such as scaling and rolling updates.
-
-***
-
 ### Accessing your cluster
 
 The easiest method for accessing your cluster API functions (ETCD and Kube API server) are via localhost on one of your master nodes themselves. However, this may not be practical- and is honestly far from optimal. You should configure the client binaries to work from your desired location remotely.
@@ -42,3 +38,9 @@ users:
     client-certificate: /path/to/client/cert
     client-key: /path/to/client/key
 ```
+
+With a good kube.config you should now be able to access your cluster. Test it with the following command; it should output the hostnames of your cluster members:
+
+    kubectl --kubeconfig=/path/to/kube.config get nodes
+
+If that is successful, you are now ready to proceed! Try deploying an application!

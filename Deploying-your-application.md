@@ -1,0 +1,47 @@
+Kubernetes biggest winning point is the ability to deploy and manage [twelve factor methodology applications](http://12factor.net/) seamlessly and with little to no effort. However, Kubernetes can be used for less agile and lightweight applications- using local mounts and including complex dependencies- and once you set up the application correctly the deployment process becomes repeatable regardless. There are a few concepts that we will discuss quickly so you understand what the deployment process looks like:
+***
+
+###Pods, not containers:
+
+While strictly speaking, Kubernetes does handle the deployment of containers- it would be more accurate to say that Kubernetes deploys pods. Pods are logically grouped sets of containers that either serve the same application, or are depending on each other to accomplish their task. For example- If you were to deploy an application that has a frontend like Apache httpd, and a backend message queue like RabbitMQ- you would not build those into the same containers. You build them into separate containers so you can maintain fine grained logging, resource control, and monitoring. The problem with this is that you now have to deploy two containers instead of one. Enter: pods. A pod by default has open network communication between its member containers, so you wont have to set up any special networking link- its like they are on the same virtual machine. The pod also ties the deployment of these containers together, meaning that you are only deploying one object. When you delete the pod, both containers go away. Technically, a pod could consist of a single container, and that is perfectly acceptable to do- but related containers which depend on each other to complete a task should be created as a pod when possible.
+
+###Replication controllers control replication (and other things):
+
+Replication controllers dictate what your pod contains, how many copies of it there are, and what resources the pod will have. This allows you to dictate your entire application deployment in one simple method. A great way of managing your replication controllers is to check the replication controller YAML in to source control with the application itself, if possible. This way, you can manage the deployment method for your application- and the application itself in one place! Replication controllers are very powerful, you can set health checking, replication numbers, containers, exposed ports, volume mounts... almost everything that doesn't involve network routing.
+
+###Services:
+
+Services dictate how you will access containers within your pods. Remember that by default network communication within a pod is open? Well by default, any communication reaching to a pod is closed. This means that users outside the cluster can't reach in to your containers. Here is where services come in. A service dictates how you access the containers, and there are multiple ways of dictating this. You can expose a container on a port on all the members of your cluster (nodePort), or even give your service its own unique IP address withing the cluster "Service network". Node ports require no extra configuration- you will simply be able to access your container on that port on any of the minions in your cluster- whether the container is on that minion or not! Using service network IP however, will require you to have a proxy within the cluster that will route traffic accordingly- this generally is hosted on the master, or is another service within the cluster with an exposed node port!
+
+***
+
+Now with the basic concepts out of the way- lets work with some examples. This example is assuming that you already know how to build a Docker container. I suggest starting with something simple- perhaps a simple nodeJS front end, or an HTTP static content server. This will minimize the confusion and the number of things that can go wrong. We will go over deploying a *single container per pod replication controller*. Parenthetical comments are descriptive and should not be included in the actual YAML.
+
+```yaml
+kind: "ReplicationController"
+apiVersion: "v1"
+metadata:
+  name: "mytestapp-controller"        (Displayed name for the RC)
+spec:
+  replicas: 2                         (Number of copies of the pod to have running at any given time)
+  selector:
+    name: "mytestapp-rc"
+  template:
+    spec:
+      containers:
+        - name: "mytestapp-http"      (Display name for the container)
+          image: "mytestapp:1.0.0"    (Docker image to create container with)
+          ports:
+            - containerPort: 8080     (Container port to expose)
+          livenessProbe:
+            httpGet:                  (Use http healthcheck to verify health of container)
+              path: /                 (URL to verify health at)
+              port: 8080              (Port to connect to via HTTP)
+            initialDelaySeconds: 5    (how long to wait before starting healthcheck)   
+            timeoutSeconds: 2         (How long to wait before healthcheck fails)
+    metadata:
+      labels:
+        app: "mytestapp"              (Metadata label to set for application for RC in ETCD)
+  labels:
+    name: "mytestapp-rc"              (Metadata label to set for name for RC in ETCD)
+```

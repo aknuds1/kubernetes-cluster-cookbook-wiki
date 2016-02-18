@@ -45,3 +45,14 @@ spec:
   labels:
     name: "mytestapp-rc"              (Metadata label to set for name for RC in ETCD)
 ```
+
+The above replication controller yaml only touches on the power of replication controllers. This is simply specifying the container in your pod, a health check, name for your replication controller and app, and an exposed port on the container. You can also mount local volumes, nfs volumes, and amazon EBS volumes. You can specify multiple containers, as well.
+
+   kubectl create -f /path/to/rc.yaml
+   kubectl get rc
+
+You now have a replication controller, being deployed and managed by kubernetes. This means your container is deployed! But it is not accessible.
+
+***
+
+As discussed above, a POD is externally inaccessible without a service exposing a method for access! This may be intentional, for example if you want a container that just spins up to do work and then dies- or even a container that stays in the cluster for some other reason- like pushing events or messages.

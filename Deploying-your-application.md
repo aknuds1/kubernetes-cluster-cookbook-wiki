@@ -48,11 +48,38 @@ spec:
 
 The above replication controller yaml only touches on the power of replication controllers. This is simply specifying the container in your pod, a health check, name for your replication controller and app, and an exposed port on the container. You can also mount local volumes, nfs volumes, and amazon EBS volumes. You can specify multiple containers, as well.
 
-   kubectl create -f /path/to/rc.yaml
-   kubectl get rc
+    kubectl create -f /path/to/rc.yaml
+    kubectl get rc
 
 You now have a replication controller, being deployed and managed by kubernetes. This means your container is deployed! But it is not accessible.
 
 ***
 
-As discussed above, a POD is externally inaccessible without a service exposing a method for access! This may be intentional, for example if you want a container that just spins up to do work and then dies- or even a container that stays in the cluster for some other reason- like pushing events or messages.
+As discussed above, a POD is externally inaccessible without a service exposing a method for access! This may be intentional, for example if you want a container that just spins up to do work and then dies- or even a container that stays in the cluster for some other reason- like pushing events or messages. Lets take a look at a sample service yaml:
+
+```yaml
+Kubernetes:
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mytestapp
+  name: mytestapp-service
+  namespace: default
+spec:
+  type: NodePort           (The method of exposing access)
+  ports:
+  - port: 8080             (The port of the container to be accessed)
+    protocol: TCP
+    nodePort: 30095        (The port on the cluster to expose)
+  selector:
+    name: mytestapp        (A selector matching the replication controller)
+```
+
+Above, I use NodePort as my method for service exposure. This means you can access this application on the specified nodePort on the IP or FQDN of the actual host itself. Meaning I can now access this application on http://minion-1.example.com:30095. The big advantage of this is that I don't have to keep tight tracking of what node the container is actually on- Kubernetes will actually route the traffic as needed. So I can also access it on http://minion-2.example.com:30095 and http://minion-3.example.com:30095 as well- even if the application is only running on one or two of them! Using this setup, I can point a load balancer at the entire cluster, and I don't have to worry about discovery, I would just update the load balancer to expose 30095 and my application is easily accessible!
+
+    kubectl create -f /path/to/svc.yaml
+    kubectl get svc
+    curl http://minion-1.example.com:30095
+
+Congratulations! If all went well, your first application is now deployed!

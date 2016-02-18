@@ -217,4 +217,4 @@ On a non TLS secured setup, use the following:
     etcdctl cluster-health
     kubectl get nodes
 
-You should now be good to use your Kubernetes cluster!
+You should now be good to use your Kubernetes cluster! Now, on to [how to access your cluster](https://github.com/bloomberg/kubernetes-cluster-cookbook/wiki/Accessing-your-cluster)

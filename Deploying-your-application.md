@@ -73,7 +73,7 @@ spec:
     protocol: TCP
     nodePort: 30095        (The port on the cluster to expose)
   selector:
-    name: mytestapp        (A selector matching the replication controller)
+    app: mytestapp         (A selector matching the replication controller pod label)
 ```
 
 Above, I use NodePort as my method for service exposure. This means you can access this application on the specified nodePort on the IP or FQDN of the actual host itself. Meaning I can now access this application on http://minion-1.example.com:30095. The big advantage of this is that I don't have to keep tight tracking of what node the container is actually on- Kubernetes will actually route the traffic as needed. So I can also access it on http://minion-2.example.com:30095 and http://minion-3.example.com:30095 as well- even if the application is only running on one or two of them! Using this setup, I can point a load balancer at the entire cluster, and I don't have to worry about discovery, I would just update the load balancer to expose 30095 and my application is easily accessible!

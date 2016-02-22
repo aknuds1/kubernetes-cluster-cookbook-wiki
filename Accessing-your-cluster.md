@@ -43,4 +43,4 @@ With a good kube.config you should now be able to access your cluster. Test it w
 
     kubectl --kubeconfig=/path/to/kube.config get nodes
 
-If that is successful, you are now ready to proceed! Try deploying an application!
+If that is successful, you are now ready to proceed! [Try deploying an application!](https://github.com/bloomberg/kubernetes-cluster-cookbook/wiki/Deploying-your-application)

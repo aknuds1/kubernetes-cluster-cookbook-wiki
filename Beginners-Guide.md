@@ -89,7 +89,7 @@ Now, create your Certificate authority cert and key. This will be used as your C
 
     cfssl gencert -initca ca-csr.json | cfssljson -bare ca -
 
-Now, create a file for the certificates for each node called kube-<hostname>.json where <hostname> is the hostname of the host. Replace data in <> angled brackets as appropriate and match the ites in the "names" section with the CA csr above:
+Now, create a file for the certificates for each node called kube-&lt;hostname&gt;.json where &lt;hostname&gt; is the hostname of the host. Replace data in <> angled brackets as appropriate and match the items in the "names" section with the CA csr above:
 
     {
         "CN": "<FQDN-OF-NODE>",
@@ -132,7 +132,7 @@ On each node, you will install chef, and do some prep work to get chef ready.
 
 You are now ready to write out your solo.json that Chef-solo will ingest to converge the cookbook! This json will contain node attributes that specify options exposed by this cookbook- and will also optionally include your TLS certificates and other information. This file you will need to create will be /etc/chef/solo.json.
 
-NON TLS Example solo.json for master. ['kubernetes']['etcd']['members'] will contain the fqdn of all your masters- 
+NON TLS Example solo.json for master. ['kubernetes']['etcd']['members'] will contain the fqdn of all your masters-
 ```json
 {
   "kubernetes": {
@@ -144,7 +144,7 @@ NON TLS Example solo.json for master. ['kubernetes']['etcd']['members'] will con
 }
 ```
 
-NON TLS Example solo.json for minions. ['kubernetes']['master']['fqdn'] will contain the fqdn of all your masters- 
+NON TLS Example solo.json for minions. ['kubernetes']['master']['fqdn'] will contain the fqdn of all your masters-
 ```json
 {
   "kubernetes": {
@@ -156,7 +156,7 @@ NON TLS Example solo.json for minions. ['kubernetes']['master']['fqdn'] will con
 }
 ```
 
-TLS enabled Example solo.json for master. ['kubernetes']['etcd']['members'] will contain the fqdn of all your masters, fill in your certificate information as needed- 
+TLS enabled Example solo.json for master. ['kubernetes']['etcd']['members'] will contain the fqdn of all your masters, fill in your certificate information as needed-
 ```json
 {
   "kubernetes": {
@@ -181,7 +181,7 @@ TLS enabled Example solo.json for master. ['kubernetes']['etcd']['members'] will
 }
 ```
 
-TLS enabled Example solo.json for minions. ['kubernetes']['master']['fqdn'] will contain the fqdn of all your masters, fill in your certificate information as needed- 
+TLS enabled Example solo.json for minions. ['kubernetes']['master']['fqdn'] will contain the fqdn of all your masters, fill in your certificate information as needed-
 ```json
 {
   "kubernetes": {
@@ -217,4 +217,4 @@ On a non TLS secured setup, use the following:
     etcdctl cluster-health
     kubectl get nodes
 
-You should now be good to use your Kubernetes cluster! Now, on to [how to access your cluster](https://github.com/bloomberg/kubernetes-cluster-cookbook/wiki/Accessing-your-cluster)
+You should now be good to use your Kubernetes cluster! Now, on to [how to access your cluster](https://github.com/bloomberg/kubernetes-cluster-cookbook/wiki/Accessing-your-cluster).
